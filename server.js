@@ -86,6 +86,88 @@ function recommendClub(adjustedDistance) {
   };
 }
 
+// API endpoint for searching golf courses
+app.get('/api/courses/search', async (req, res) => {
+    try {
+        const { query, lat, lon } = req.query;
+
+        if (!query && (!lat || !lon)) {
+            return res.status(400).json({ error: 'Query or location required' });
+        }
+
+        const golfApiKey = process.env.GOLF_COURSE_API_KEY;
+
+        // If no API key configured, return mock data for demo
+        if (!golfApiKey || golfApiKey === 'your_api_key_here') {
+            return res.json({
+                courses: [],
+                message: 'Golf Course API not configured. Please add GOLF_COURSE_API_KEY to environment variables.'
+            });
+        }
+
+        // Search by query string
+        let apiUrl;
+        if (query) {
+            apiUrl = `https://api.golfcourseapi.com/courses/search?q=${encodeURIComponent(query)}`;
+        } else {
+            // Search by location
+            apiUrl = `https://api.golfcourseapi.com/courses/nearby?lat=${lat}&lon=${lon}`;
+        }
+
+        const response = await axios.get(apiUrl, {
+            headers: {
+                'Authorization': `Bearer ${golfApiKey}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        res.json({
+            courses: response.data.courses || response.data || []
+        });
+
+    } catch (error) {
+        console.error('Golf Course API error:', error.message);
+        res.status(500).json({
+            error: 'Failed to search courses',
+            message: error.message
+        });
+    }
+});
+
+// API endpoint for getting course details (with holes)
+app.get('/api/courses/:courseId', async (req, res) => {
+    try {
+        const { courseId } = req.params;
+
+        const golfApiKey = process.env.GOLF_COURSE_API_KEY;
+
+        if (!golfApiKey || golfApiKey === 'your_api_key_here') {
+            return res.status(400).json({
+                error: 'Golf Course API not configured'
+            });
+        }
+
+        const response = await axios.get(
+            `https://api.golfcourseapi.com/courses/${courseId}`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${golfApiKey}`,
+                    'Accept': 'application/json'
+                }
+            }
+        );
+
+        res.json(response.data);
+
+    } catch (error) {
+        console.error('Golf Course API error:', error.message);
+        res.status(500).json({
+            error: 'Failed to get course details',
+            message: error.message
+        });
+    }
+});
+
 // API endpoint for club recommendation
 app.post('/api/recommend', async (req, res) => {
   try {

@@ -84,31 +84,78 @@
                     </div>
 
                     <div id="gpsSetup" class="gps-setup">
-                        <p class="info-text">📍 Mark your current position and enter the distance to the hole. The app will calculate the pin location and track as you move.</p>
+                        <!-- Course Lookup Option -->
+                        <details class="course-lookup-section" open>
+                            <summary>🏌️ Find My Course</summary>
+                            <div class="course-lookup-content">
+                                <p class="info-text">Search for your golf course to auto-fill hole locations</p>
 
-                        <div class="form-group">
-                            <label for="knownDistance">Distance to Hole (yards)</label>
-                            <input
-                                type="number"
-                                id="knownDistance"
-                                name="knownDistance"
-                                placeholder="e.g., 150"
-                                min="1"
-                                step="1"
-                            >
-                            <small>From rangefinder or hole marker</small>
-                        </div>
+                                <div class="form-group">
+                                    <label for="courseSearch">Course Name or Location</label>
+                                    <input
+                                        type="text"
+                                        id="courseSearch"
+                                        name="courseSearch"
+                                        placeholder="e.g., Pebble Beach or City name"
+                                    >
+                                </div>
 
-                        <button type="button" class="btn-primary" id="markPositionBtn">
-                            Mark Position & Start Tracking
-                        </button>
+                                <button type="button" class="btn-primary" id="searchCourseBtn">
+                                    Search Courses
+                                </button>
+
+                                <div id="courseResults" class="course-results hidden"></div>
+
+                                <div id="holeSelection" class="hole-selection hidden">
+                                    <div class="form-group">
+                                        <label for="holeNumber">Select Hole</label>
+                                        <select id="holeNumber" name="holeNumber">
+                                            <option value="">Choose hole...</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" class="btn-primary" id="useHoleLocationBtn">
+                                        Use This Hole & Start Tracking
+                                    </button>
+                                </div>
+                            </div>
+                        </details>
 
                         <div class="divider">
                             <span>OR</span>
                         </div>
 
+                        <!-- Rangefinder Option -->
+                        <details class="rangefinder-section">
+                            <summary>📏 Use Rangefinder</summary>
+                            <div class="rangefinder-content">
+                                <p class="info-text">📍 Mark your position and enter distance from rangefinder/marker. Most accurate for daily pin positions.</p>
+
+                                <div class="form-group">
+                                    <label for="knownDistance">Distance to Hole (yards)</label>
+                                    <input
+                                        type="number"
+                                        id="knownDistance"
+                                        name="knownDistance"
+                                        placeholder="e.g., 150"
+                                        min="1"
+                                        step="1"
+                                    >
+                                    <small>From rangefinder or hole marker</small>
+                                </div>
+
+                                <button type="button" class="btn-primary" id="markPositionBtn">
+                                    Mark Position & Start Tracking
+                                </button>
+                            </div>
+                        </details>
+
+                        <div class="divider">
+                            <span>OR</span>
+                        </div>
+
+                        <!-- Direct Coordinates Option -->
                         <details class="advanced-options">
-                            <summary>Enter Pin GPS Coordinates</summary>
+                            <summary>🎯 Enter Pin GPS Coordinates</summary>
                             <div class="gps-coords">
                                 <div class="form-group">
                                     <label for="pinLat">Pin Latitude</label>

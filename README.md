@@ -23,20 +23,30 @@ A lightweight web application that recommends the best golf club based on distan
 
 ### GPS Tracking Mode
 
-**Option 1: Distance-Based Calibration (Recommended)**
+The app offers three ways to set up GPS tracking:
+
+**Option 1: Course Lookup (Easiest)**
+1. **Search Course**: Enter your course name or city (e.g., "Pebble Beach" or "Augusta")
+2. **Select Course**: Choose from search results
+3. **Pick Hole**: Select which hole you're playing
+4. **Start Tracking**: App uses course location and tracks your distance automatically
+
+*Note: Requires Golf Course API key (see setup below). Uses approximate hole center - less accurate than rangefinder method for daily pin positions.*
+
+**Option 2: Rangefinder + GPS (Most Accurate)**
 1. **Check Distance**: Use your rangefinder or hole marker to get distance to pin
 2. **Mark Position**: Stand at your ball and mark your current GPS location
 3. **Enter Distance**: Input the known distance (e.g., 150 yards)
 4. **Walk Toward Hole**: Take a few steps (5+ yards) toward the hole to calibrate direction
 5. **Auto-Calculate Pin**: App calculates the pin's GPS location based on your movement
 6. **Track Continuously**: As you move around the course, distance updates in real-time
-7. **Live Recommendations**: Club suggestions update automatically based on current position
 
-**Option 2: Direct Pin Coordinates**
+*Recommended for accuracy since pin positions change daily.*
+
+**Option 3: Direct Pin Coordinates (Advanced)**
 1. **Get Pin GPS**: Obtain pin coordinates from course GPS app or database
 2. **Enter Coordinates**: Input latitude and longitude directly
 3. **Start Tracking**: Instant tracking without calibration
-4. **Move Freely**: Distance updates as you move on the course
 
 ### Algorithm
 
@@ -98,7 +108,9 @@ The app considers multiple factors:
 
 6. Open your browser to `http://localhost:3000`
 
-## Getting an OpenWeatherMap API Key
+## Getting API Keys
+
+### OpenWeatherMap API Key (Required for Weather)
 
 1. Go to [OpenWeatherMap](https://openweathermap.org/api)
 2. Sign up for a free account
@@ -110,6 +122,22 @@ The free tier includes:
 - 1,000 API calls per day
 - Current weather data
 - More than sufficient for personal use
+
+### Golf Course API Key (Optional for Course Lookup)
+
+1. Go to [GolfCourseAPI.com](https://golfcourseapi.com/)
+2. Sign up with your email (completely free)
+3. Access your API key from the dashboard
+4. Add it to your `.env` file:
+   ```
+   GOLF_COURSE_API_KEY=your_actual_api_key_here
+   ```
+
+Features:
+- Access to 30,000+ golf courses worldwide
+- Completely free
+- Course locations and basic hole data
+- **Note**: Provides approximate hole locations, not daily pin positions
 
 ## Deployment to Render
 
@@ -124,9 +152,9 @@ The free tier includes:
    - **Build Command**: `npm install`
    - **Start Command**: `npm start`
    - **Instance Type**: Free
-5. Add environment variable:
-   - Key: `OPENWEATHER_API_KEY`
-   - Value: Your OpenWeatherMap API key
+5. Add environment variables:
+   - Key: `OPENWEATHER_API_KEY` - Value: Your OpenWeatherMap API key (required for weather)
+   - Key: `GOLF_COURSE_API_KEY` - Value: Your Golf Course API key (optional for course lookup)
 6. Click "Create Web Service"
 
 ### Option 2: Using render.yaml (Infrastructure as Code)
@@ -137,7 +165,9 @@ This repository includes a `render.yaml` file for automated deployment:
 2. In Render dashboard, click "New +" and select "Blueprint"
 3. Connect your repository
 4. Render will automatically detect `render.yaml` and configure everything
-5. Add your `OPENWEATHER_API_KEY` in the Render dashboard
+5. Add your environment variables in the Render dashboard:
+   - `OPENWEATHER_API_KEY` (required for weather)
+   - `GOLF_COURSE_API_KEY` (optional for course lookup)
 
 ## Project Structure
 

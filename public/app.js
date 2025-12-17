@@ -23,6 +23,14 @@ const knownDistanceInput = document.getElementById('knownDistance');
 const pinLatInput = document.getElementById('pinLat');
 const pinLonInput = document.getElementById('pinLon');
 
+// Course lookup elements
+const courseSearchInput = document.getElementById('courseSearch');
+const searchCourseBtn = document.getElementById('searchCourseBtn');
+const courseResults = document.getElementById('courseResults');
+const holeSelection = document.getElementById('holeSelection');
+const holeNumberSelect = document.getElementById('holeNumber');
+const useHoleLocationBtn = document.getElementById('useHoleLocationBtn');
+
 // GPS tracking state
 let holeLocation = null;
 let startPosition = null;
@@ -31,6 +39,10 @@ let currentRecommendation = null;
 let updateInterval = null;
 let calibrationMode = false;
 let calibrationPositions = [];
+
+// Course lookup state
+let selectedCourse = null;
+let selectedHole = null;
 
 // Hide result and error on page load
 result.classList.add('hidden');
@@ -232,6 +244,130 @@ stopTrackingBtn.addEventListener('click', () => {
     calibrationMode = false;
     calibrationPositions = [];
     gpsDistanceDisplay.textContent = '---';
+});
+
+// Course Lookup: Search courses
+searchCourseBtn.addEventListener('click', async () => {
+    const query = courseSearchInput.value.trim();
+
+    if (!query) {
+        showError('Please enter a course name or location');
+        return;
+    }
+
+    try {
+        searchCourseBtn.disabled = true;
+        searchCourseBtn.textContent = 'Searching...';
+
+        const response = await fetch(`/api/courses/search?query=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to search courses');
+        }
+
+        if (data.message) {
+            showError(data.message);
+            return;
+        }
+
+        displayCourseResults(data.courses);
+
+    } catch (err) {
+        console.error('Course search error:', err);
+        showError(err.message || 'Failed to search courses. Please try again.');
+    } finally {
+        searchCourseBtn.disabled = false;
+        searchCourseBtn.textContent = 'Search Courses';
+    }
+});
+
+// Course Lookup: Display search results
+function displayCourseResults(courses) {
+    if (!courses || courses.length === 0) {
+        courseResults.innerHTML = '<p class="info-text">No courses found. Try a different search.</p>';
+        courseResults.classList.remove('hidden');
+        holeSelection.classList.add('hidden');
+        return;
+    }
+
+    courseResults.innerHTML = courses.map((course, index) => `
+        <div class="course-item" data-index="${index}" data-course='${JSON.stringify(course)}'>
+            <div class="course-name">${course.name || 'Unknown Course'}</div>
+            <div class="course-location">${[course.city, course.state, course.country].filter(Boolean).join(', ')}</div>
+        </div>
+    `).join('');
+
+    courseResults.classList.remove('hidden');
+
+    // Add click handlers for course selection
+    document.querySelectorAll('.course-item').forEach(item => {
+        item.addEventListener('click', () => {
+            selectCourse(JSON.parse(item.dataset.course));
+        });
+    });
+}
+
+// Course Lookup: Select a course
+function selectCourse(course) {
+    selectedCourse = course;
+
+    // Highlight selected course
+    document.querySelectorAll('.course-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    event.target.closest('.course-item').classList.add('selected');
+
+    // Populate hole dropdown (assume 18 holes)
+    holeNumberSelect.innerHTML = '<option value="">Choose hole...</option>';
+    for (let i = 1; i <= 18; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `Hole ${i}`;
+        holeNumberSelect.appendChild(option);
+    }
+
+    holeSelection.classList.remove('hidden');
+}
+
+// Course Lookup: Use selected hole location
+useHoleLocationBtn.addEventListener('click', async () => {
+    const holeNum = parseInt(holeNumberSelect.value);
+
+    if (!selectedCourse || !holeNum) {
+        showError('Please select a course and hole number');
+        return;
+    }
+
+    try {
+        useHoleLocationBtn.disabled = true;
+        useHoleLocationBtn.textContent = 'Loading...';
+
+        // For now, estimate hole location based on course location
+        // In a real implementation, you would fetch detailed hole data from the API
+        if (selectedCourse.latitude && selectedCourse.longitude) {
+            holeLocation = {
+                latitude: selectedCourse.latitude,
+                longitude: selectedCourse.longitude
+            };
+
+            gpsSetup.classList.add('hidden');
+            gpsTracking.classList.remove('hidden');
+
+            startGPSTracking();
+
+            showError(`Tracking ${selectedCourse.name} - Hole ${holeNum}`, 'success');
+        } else {
+            showError('Course location not available. Please try another method.');
+        }
+
+    } catch (err) {
+        console.error('Error using hole location:', err);
+        showError('Failed to use hole location. Please try again.');
+    } finally {
+        useHoleLocationBtn.disabled = false;
+        useHoleLocationBtn.textContent = 'Use This Hole & Start Tracking';
+    }
 });
 
 // Start GPS tracking
