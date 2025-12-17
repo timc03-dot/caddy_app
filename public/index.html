@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golf Club Recommender</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⛳ Golf Club Recommender</h1>
+            <p class="subtitle">Get the perfect club for your shot</p>
+        </header>
+
+        <main>
+            <div class="card">
+                <form id="recommendForm">
+                    <div class="form-group">
+                        <label for="distance">Distance to Hole (yards)</label>
+                        <input
+                            type="number"
+                            id="distance"
+                            name="distance"
+                            placeholder="e.g., 150"
+                            required
+                            min="1"
+                            step="1"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="handicap">Handicap (optional)</label>
+                        <input
+                            type="number"
+                            id="handicap"
+                            name="handicap"
+                            placeholder="e.g., 18"
+                            min="0"
+                            max="54"
+                            step="1"
+                        >
+                        <small>Leave empty if scratch golfer (0 handicap)</small>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" id="useWeather" name="useWeather" checked>
+                            Use local weather conditions
+                        </label>
+                        <small>Uses your location to factor in wind and temperature</small>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="submitBtn">
+                        Get Recommendation
+                    </button>
+                </form>
+
+                <div id="loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Analyzing conditions...</p>
+                </div>
+
+                <div id="result" class="result hidden">
+                    <div class="recommendation">
+                        <h2>Recommended Club</h2>
+                        <div class="club-name" id="clubName"></div>
+                        <div class="club-distance" id="clubDistance"></div>
+                    </div>
+
+                    <div class="alternatives" id="alternatives"></div>
+
+                    <div class="conditions" id="conditions"></div>
+
+                    <div class="adjustments" id="adjustments"></div>
+
+                    <button class="btn-secondary" id="tryAgain">Try Another Shot</button>
+                </div>
+
+                <div id="error" class="error hidden"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Weather data provided by OpenWeatherMap</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

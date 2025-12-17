@@ -1,0 +1,21 @@
+{
+  "name": "golf-club-recommender",
+  "version": "1.0.0",
+  "description": "A lightweight golf club recommendation app based on distance, handicap, and weather conditions",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["golf", "club", "recommender", "weather"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
