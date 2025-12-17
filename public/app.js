@@ -48,13 +48,59 @@ let selectedHole = null;
 result.classList.add('hidden');
 error.classList.add('hidden');
 
+// Skill level handlers for Manual Mode
+const manualSkillLevelRadios = document.querySelectorAll('input[name="manualSkillLevel"]');
+const manualHandicapInputDiv = document.getElementById('manualHandicapInput');
+
+manualSkillLevelRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+        if (radio.value === 'handicap') {
+            manualHandicapInputDiv.classList.remove('hidden');
+        } else {
+            manualHandicapInputDiv.classList.add('hidden');
+        }
+    });
+});
+
+// Skill level handlers for GPS Mode
+const gpsSkillLevelRadios = document.querySelectorAll('input[name="gpsSkillLevel"]');
+const gpsHandicapInputDiv = document.getElementById('gpsHandicapInput');
+
+gpsSkillLevelRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+        if (radio.value === 'handicap') {
+            gpsHandicapInputDiv.classList.remove('hidden');
+        } else {
+            gpsHandicapInputDiv.classList.add('hidden');
+        }
+    });
+});
+
+// Helper function to get handicap value based on skill level
+function getHandicapValue(skillLevelName) {
+    const selectedSkillLevel = document.querySelector(`input[name="${skillLevelName}"]:checked`);
+    if (!selectedSkillLevel) return 28; // Default to beginner
+
+    switch(selectedSkillLevel.value) {
+        case 'beginner':
+            return 28; // Typical beginner handicap
+        case 'scratch':
+            return 0; // Scratch golfer
+        case 'handicap':
+            const inputId = skillLevelName === 'manualSkillLevel' ? 'handicap' : 'gpsHandicap';
+            const handicapInput = document.getElementById(inputId).value;
+            return handicapInput ? parseInt(handicapInput) : 28;
+        default:
+            return 28;
+    }
+}
+
 // Form submission handler
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const distance = parseInt(document.getElementById('distance').value);
-    const handicapInput = document.getElementById('handicap').value;
-    const handicap = handicapInput ? parseInt(handicapInput) : null;
+    const handicap = getHandicapValue('manualSkillLevel');
     const useWeather = document.getElementById('useWeather').checked;
 
     // Hide previous results/errors
@@ -563,8 +609,7 @@ function calculateDestination(lat, lon, bearing, distanceYards) {
 // Update recommendation based on GPS distance
 async function updateRecommendation(distance, latitude, longitude) {
     try {
-        const handicapInput = document.getElementById('gpsHandicap').value;
-        const handicap = handicapInput ? parseInt(handicapInput) : null;
+        const handicap = getHandicapValue('gpsSkillLevel');
 
         const response = await fetch('/api/recommend', {
             method: 'POST',

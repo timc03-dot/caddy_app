@@ -41,17 +41,32 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="handicap">Handicap (optional)</label>
-                        <input
-                            type="number"
-                            id="handicap"
-                            name="handicap"
-                            placeholder="e.g., 18"
-                            min="0"
-                            max="54"
-                            step="1"
-                        >
-                        <small>Leave empty if scratch golfer (0 handicap)</small>
+                        <label>Skill Level</label>
+                        <div class="skill-level-options">
+                            <label class="radio-option">
+                                <input type="radio" name="manualSkillLevel" value="beginner" checked>
+                                <span>I'm a beginner (no handicap yet)</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="manualSkillLevel" value="handicap">
+                                <span>I have a handicap</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="manualSkillLevel" value="scratch">
+                                <span>Scratch golfer (0 handicap)</span>
+                            </label>
+                        </div>
+                        <div id="manualHandicapInput" class="handicap-input hidden">
+                            <input
+                                type="number"
+                                id="handicap"
+                                name="handicap"
+                                placeholder="e.g., 18"
+                                min="0"
+                                max="54"
+                                step="1"
+                            >
+                        </div>
                     </div>
 
                     <div class="form-group checkbox-group">
@@ -70,17 +85,32 @@
                 <!-- GPS Tracking Mode -->
                 <div id="gpsMode" class="mode-content hidden">
                     <div class="form-group">
-                        <label for="gpsHandicap">Handicap (optional)</label>
-                        <input
-                            type="number"
-                            id="gpsHandicap"
-                            name="gpsHandicap"
-                            placeholder="e.g., 18"
-                            min="0"
-                            max="54"
-                            step="1"
-                        >
-                        <small>Leave empty if scratch golfer (0 handicap)</small>
+                        <label>Skill Level</label>
+                        <div class="skill-level-options">
+                            <label class="radio-option">
+                                <input type="radio" name="gpsSkillLevel" value="beginner" checked>
+                                <span>I'm a beginner (no handicap yet)</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="gpsSkillLevel" value="handicap">
+                                <span>I have a handicap</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="gpsSkillLevel" value="scratch">
+                                <span>Scratch golfer (0 handicap)</span>
+                            </label>
+                        </div>
+                        <div id="gpsHandicapInput" class="handicap-input hidden">
+                            <input
+                                type="number"
+                                id="gpsHandicap"
+                                name="gpsHandicap"
+                                placeholder="e.g., 18"
+                                min="0"
+                                max="54"
+                                step="1"
+                            >
+                        </div>
                     </div>
 
                     <div id="gpsSetup" class="gps-setup">
