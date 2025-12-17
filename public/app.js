@@ -14,16 +14,23 @@ const gpsMode = document.getElementById('gpsMode');
 // GPS elements
 const gpsSetup = document.getElementById('gpsSetup');
 const gpsTracking = document.getElementById('gpsTracking');
-const markHoleBtn = document.getElementById('markHoleBtn');
+const markPositionBtn = document.getElementById('markPositionBtn');
+const setCoordinatesBtn = document.getElementById('setCoordinatesBtn');
 const newHoleBtn = document.getElementById('newHoleBtn');
 const stopTrackingBtn = document.getElementById('stopTrackingBtn');
 const gpsDistanceDisplay = document.getElementById('gpsDistance');
+const knownDistanceInput = document.getElementById('knownDistance');
+const pinLatInput = document.getElementById('pinLat');
+const pinLonInput = document.getElementById('pinLon');
 
 // GPS tracking state
 let holeLocation = null;
+let startPosition = null;
 let watchId = null;
 let currentRecommendation = null;
 let updateInterval = null;
+let calibrationMode = false;
+let calibrationPositions = [];
 
 // Hide result and error on page load
 result.classList.add('hidden');
@@ -110,6 +117,10 @@ manualModeBtn.addEventListener('click', () => {
     gpsMode.classList.add('hidden');
     result.classList.add('hidden');
     stopGPSTracking();
+    holeLocation = null;
+    startPosition = null;
+    calibrationMode = false;
+    calibrationPositions = [];
 });
 
 gpsModeBtn.addEventListener('click', () => {
@@ -120,16 +131,64 @@ gpsModeBtn.addEventListener('click', () => {
     result.classList.add('hidden');
 });
 
-// GPS: Mark hole location
-markHoleBtn.addEventListener('click', async () => {
+// GPS: Mark position and calculate pin location
+markPositionBtn.addEventListener('click', async () => {
+    const knownDistance = parseFloat(knownDistanceInput.value);
+
+    if (!knownDistance || knownDistance <= 0) {
+        showError('Please enter the distance to the hole');
+        return;
+    }
+
     try {
-        markHoleBtn.disabled = true;
-        markHoleBtn.textContent = 'Getting location...';
+        markPositionBtn.disabled = true;
+        markPositionBtn.textContent = 'Getting location...';
 
         const position = await getCurrentPosition();
-        holeLocation = {
+        startPosition = {
             latitude: position.coords.latitude,
-            longitude: position.coords.longitude
+            longitude: position.coords.longitude,
+            knownDistance: knownDistance
+        };
+
+        // Start calibration mode: user takes a few steps toward hole
+        calibrationMode = true;
+        calibrationPositions = [position.coords];
+
+        gpsSetup.classList.add('hidden');
+        gpsTracking.classList.remove('hidden');
+
+        // Show calibration message
+        showError('Walk a few steps toward the hole to calibrate direction...', 'success');
+
+        startGPSTracking();
+
+    } catch (err) {
+        console.error('Error marking position:', err);
+        showError('Could not get your location. Please enable GPS.');
+    } finally {
+        markPositionBtn.disabled = false;
+        markPositionBtn.textContent = 'Mark Position & Start Tracking';
+    }
+});
+
+// GPS: Set pin coordinates directly
+setCoordinatesBtn.addEventListener('click', async () => {
+    const pinLat = parseFloat(pinLatInput.value);
+    const pinLon = parseFloat(pinLonInput.value);
+
+    if (!pinLat || !pinLon) {
+        showError('Please enter both latitude and longitude');
+        return;
+    }
+
+    try {
+        setCoordinatesBtn.disabled = true;
+        setCoordinatesBtn.textContent = 'Starting...';
+
+        holeLocation = {
+            latitude: pinLat,
+            longitude: pinLon
         };
 
         gpsSetup.classList.add('hidden');
@@ -137,13 +196,14 @@ markHoleBtn.addEventListener('click', async () => {
 
         startGPSTracking();
 
-        showError('Hole location marked! Move away to track distance.', 'success');
+        showError('Tracking started with pin coordinates!', 'success');
+
     } catch (err) {
-        console.error('Error marking hole:', err);
-        showError('Could not get your location. Please enable GPS.');
+        console.error('Error setting coordinates:', err);
+        showError('An error occurred. Please try again.');
     } finally {
-        markHoleBtn.disabled = false;
-        markHoleBtn.textContent = 'Mark Hole Location';
+        setCoordinatesBtn.disabled = false;
+        setCoordinatesBtn.textContent = 'Start Tracking with Coordinates';
     }
 });
 
@@ -154,7 +214,11 @@ newHoleBtn.addEventListener('click', () => {
     gpsSetup.classList.remove('hidden');
     result.classList.add('hidden');
     holeLocation = null;
+    startPosition = null;
+    calibrationMode = false;
+    calibrationPositions = [];
     gpsDistanceDisplay.textContent = '---';
+    knownDistanceInput.value = '';
 });
 
 // GPS: Stop tracking
@@ -164,6 +228,9 @@ stopTrackingBtn.addEventListener('click', () => {
     gpsSetup.classList.remove('hidden');
     result.classList.add('hidden');
     holeLocation = null;
+    startPosition = null;
+    calibrationMode = false;
+    calibrationPositions = [];
     gpsDistanceDisplay.textContent = '---';
 });
 
@@ -199,10 +266,58 @@ function stopGPSTracking() {
 
 // Handle position update
 async function handlePositionUpdate(position) {
-    if (!holeLocation) return;
-
     const currentLat = position.coords.latitude;
     const currentLon = position.coords.longitude;
+
+    // Calibration mode: calculate pin location from movement
+    if (calibrationMode && startPosition) {
+        calibrationPositions.push(position.coords);
+
+        // Need at least 2 positions to calculate bearing
+        if (calibrationPositions.length >= 2) {
+            const firstPos = calibrationPositions[0];
+            const lastPos = calibrationPositions[calibrationPositions.length - 1];
+
+            // Calculate distance moved
+            const movedDistance = calculateDistance(
+                firstPos.latitude,
+                firstPos.longitude,
+                lastPos.latitude,
+                lastPos.longitude
+            );
+
+            // If moved at least 5 yards, calculate bearing and pin location
+            if (movedDistance >= 5) {
+                const bearing = calculateBearing(
+                    firstPos.latitude,
+                    firstPos.longitude,
+                    lastPos.latitude,
+                    lastPos.longitude
+                );
+
+                // Calculate pin location based on bearing and known distance
+                holeLocation = calculateDestination(
+                    startPosition.latitude,
+                    startPosition.longitude,
+                    bearing,
+                    startPosition.knownDistance
+                );
+
+                calibrationMode = false;
+                calibrationPositions = [];
+                showError('Pin location calculated! Tracking active.', 'success');
+            }
+        }
+
+        // During calibration, show estimated distance
+        if (startPosition) {
+            gpsDistanceDisplay.textContent = Math.round(startPosition.knownDistance);
+        }
+        return;
+    }
+
+    // Normal tracking mode
+    if (!holeLocation) return;
 
     // Calculate distance to hole
     const distanceYards = calculateDistance(
@@ -261,6 +376,52 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 // Convert degrees to radians
 function toRadians(degrees) {
     return degrees * (Math.PI / 180);
+}
+
+// Convert radians to degrees
+function toDegrees(radians) {
+    return radians * (180 / Math.PI);
+}
+
+// Calculate bearing between two points
+function calculateBearing(lat1, lon1, lat2, lon2) {
+    const dLon = toRadians(lon2 - lon1);
+    const lat1Rad = toRadians(lat1);
+    const lat2Rad = toRadians(lat2);
+
+    const y = Math.sin(dLon) * Math.cos(lat2Rad);
+    const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+        Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+
+    const bearingRad = Math.atan2(y, x);
+    const bearingDeg = toDegrees(bearingRad);
+
+    // Normalize to 0-360
+    return (bearingDeg + 360) % 360;
+}
+
+// Calculate destination point given start point, bearing, and distance
+function calculateDestination(lat, lon, bearing, distanceYards) {
+    const R = 3958.8; // Earth's radius in miles
+    const distanceMiles = distanceYards / 1760;
+    const bearingRad = toRadians(bearing);
+    const latRad = toRadians(lat);
+    const lonRad = toRadians(lon);
+
+    const newLatRad = Math.asin(
+        Math.sin(latRad) * Math.cos(distanceMiles / R) +
+        Math.cos(latRad) * Math.sin(distanceMiles / R) * Math.cos(bearingRad)
+    );
+
+    const newLonRad = lonRad + Math.atan2(
+        Math.sin(bearingRad) * Math.sin(distanceMiles / R) * Math.cos(latRad),
+        Math.cos(distanceMiles / R) - Math.sin(latRad) * Math.sin(newLatRad)
+    );
+
+    return {
+        latitude: toDegrees(newLatRad),
+        longitude: toDegrees(newLonRad)
+    };
 }
 
 // Update recommendation based on GPS distance

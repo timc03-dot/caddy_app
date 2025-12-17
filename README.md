@@ -22,22 +22,35 @@ A lightweight web application that recommends the best golf club based on distan
 4. **Get Recommendation**: Receive your club recommendation with alternatives and detailed adjustments
 
 ### GPS Tracking Mode
-1. **Mark Hole Location**: Walk to the pin and mark its GPS coordinates
-2. **Move Back**: Walk back to your ball or anywhere on the course
-3. **Auto-Track Distance**: App continuously calculates and updates distance to the hole
-4. **Live Recommendations**: Club recommendations update automatically as you move
-5. **Weather-Aware**: Factors in real-time wind and temperature conditions
+
+**Option 1: Distance-Based Calibration (Recommended)**
+1. **Check Distance**: Use your rangefinder or hole marker to get distance to pin
+2. **Mark Position**: Stand at your ball and mark your current GPS location
+3. **Enter Distance**: Input the known distance (e.g., 150 yards)
+4. **Walk Toward Hole**: Take a few steps (5+ yards) toward the hole to calibrate direction
+5. **Auto-Calculate Pin**: App calculates the pin's GPS location based on your movement
+6. **Track Continuously**: As you move around the course, distance updates in real-time
+7. **Live Recommendations**: Club suggestions update automatically based on current position
+
+**Option 2: Direct Pin Coordinates**
+1. **Get Pin GPS**: Obtain pin coordinates from course GPS app or database
+2. **Enter Coordinates**: Input latitude and longitude directly
+3. **Start Tracking**: Instant tracking without calibration
+4. **Move Freely**: Distance updates as you move on the course
 
 ### Algorithm
 
 The app considers multiple factors:
 
-- **GPS Distance Calculation**: Uses Haversine formula to calculate precise distance between your position and the hole
+- **GPS Calculations**:
+  - **Distance**: Haversine formula for accurate distance between positions
+  - **Bearing**: Calculates direction of movement from GPS coordinates
+  - **Pin Location**: Computes pin coordinates from start position, bearing, and known distance
+  - **Continuous Tracking**: Real-time position updates using watchPosition API
 - **Base Club Distances**: Standard distances for each club (scratch golfer baseline)
 - **Handicap Adjustment**: Reduces club distances based on handicap (≈0.5% per stroke)
 - **Wind Effect**: Adjusts for headwind/tailwind conditions
 - **Temperature Effect**: Accounts for ball flight differences in hot/cold weather
-- **Continuous Tracking**: Updates recommendations as GPS position changes
 - **Alternatives**: Provides longer and shorter club options
 
 ## Tech Stack
