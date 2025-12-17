@@ -15,7 +15,18 @@
 
         <main>
             <div class="card">
-                <form id="recommendForm">
+                <!-- Mode Toggle -->
+                <div class="mode-toggle">
+                    <button type="button" class="mode-btn active" id="manualModeBtn">
+                        📝 Manual Distance
+                    </button>
+                    <button type="button" class="mode-btn" id="gpsModeBtn">
+                        📍 GPS Tracking
+                    </button>
+                </div>
+
+                <!-- Manual Mode Form -->
+                <form id="recommendForm" class="mode-content">
                     <div class="form-group">
                         <label for="distance">Distance to Hole (yards)</label>
                         <input
@@ -55,6 +66,56 @@
                         Get Recommendation
                     </button>
                 </form>
+
+                <!-- GPS Tracking Mode -->
+                <div id="gpsMode" class="mode-content hidden">
+                    <div class="form-group">
+                        <label for="gpsHandicap">Handicap (optional)</label>
+                        <input
+                            type="number"
+                            id="gpsHandicap"
+                            name="gpsHandicap"
+                            placeholder="e.g., 18"
+                            min="0"
+                            max="54"
+                            step="1"
+                        >
+                        <small>Leave empty if scratch golfer (0 handicap)</small>
+                    </div>
+
+                    <div id="gpsSetup" class="gps-setup">
+                        <p class="info-text">📍 Walk to the hole and mark its location, then move back to track your distance automatically.</p>
+                        <button type="button" class="btn-primary" id="markHoleBtn">
+                            Mark Hole Location
+                        </button>
+                    </div>
+
+                    <div id="gpsTracking" class="gps-tracking hidden">
+                        <div class="tracking-status">
+                            <div class="status-indicator">
+                                <span class="pulse"></span>
+                                <span>Tracking Active</span>
+                            </div>
+                        </div>
+
+                        <div class="distance-display">
+                            <div class="current-distance">
+                                <span class="distance-value" id="gpsDistance">---</span>
+                                <span class="distance-unit">yards</span>
+                            </div>
+                            <small>Distance to hole</small>
+                        </div>
+
+                        <div class="gps-actions">
+                            <button type="button" class="btn-secondary" id="newHoleBtn">
+                                Mark New Hole
+                            </button>
+                            <button type="button" class="btn-secondary" id="stopTrackingBtn">
+                                Stop Tracking
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
                 <div id="loading" class="loading hidden">
                     <div class="spinner"></div>

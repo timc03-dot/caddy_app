@@ -1,9 +1,29 @@
+// DOM Elements
 const form = document.getElementById('recommendForm');
 const submitBtn = document.getElementById('submitBtn');
 const loading = document.getElementById('loading');
 const result = document.getElementById('result');
 const error = document.getElementById('error');
 const tryAgainBtn = document.getElementById('tryAgain');
+
+// Mode toggle elements
+const manualModeBtn = document.getElementById('manualModeBtn');
+const gpsModeBtn = document.getElementById('gpsModeBtn');
+const gpsMode = document.getElementById('gpsMode');
+
+// GPS elements
+const gpsSetup = document.getElementById('gpsSetup');
+const gpsTracking = document.getElementById('gpsTracking');
+const markHoleBtn = document.getElementById('markHoleBtn');
+const newHoleBtn = document.getElementById('newHoleBtn');
+const stopTrackingBtn = document.getElementById('stopTrackingBtn');
+const gpsDistanceDisplay = document.getElementById('gpsDistance');
+
+// GPS tracking state
+let holeLocation = null;
+let watchId = null;
+let currentRecommendation = null;
+let updateInterval = null;
 
 // Hide result and error on page load
 result.classList.add('hidden');
@@ -81,6 +101,201 @@ tryAgainBtn.addEventListener('click', () => {
     form.reset();
     document.getElementById('useWeather').checked = true;
 });
+
+// Mode toggle handlers
+manualModeBtn.addEventListener('click', () => {
+    manualModeBtn.classList.add('active');
+    gpsModeBtn.classList.remove('active');
+    form.classList.remove('hidden');
+    gpsMode.classList.add('hidden');
+    result.classList.add('hidden');
+    stopGPSTracking();
+});
+
+gpsModeBtn.addEventListener('click', () => {
+    gpsModeBtn.classList.add('active');
+    manualModeBtn.classList.remove('active');
+    gpsMode.classList.remove('hidden');
+    form.classList.add('hidden');
+    result.classList.add('hidden');
+});
+
+// GPS: Mark hole location
+markHoleBtn.addEventListener('click', async () => {
+    try {
+        markHoleBtn.disabled = true;
+        markHoleBtn.textContent = 'Getting location...';
+
+        const position = await getCurrentPosition();
+        holeLocation = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+        };
+
+        gpsSetup.classList.add('hidden');
+        gpsTracking.classList.remove('hidden');
+
+        startGPSTracking();
+
+        showError('Hole location marked! Move away to track distance.', 'success');
+    } catch (err) {
+        console.error('Error marking hole:', err);
+        showError('Could not get your location. Please enable GPS.');
+    } finally {
+        markHoleBtn.disabled = false;
+        markHoleBtn.textContent = 'Mark Hole Location';
+    }
+});
+
+// GPS: Mark new hole
+newHoleBtn.addEventListener('click', () => {
+    stopGPSTracking();
+    gpsTracking.classList.add('hidden');
+    gpsSetup.classList.remove('hidden');
+    result.classList.add('hidden');
+    holeLocation = null;
+    gpsDistanceDisplay.textContent = '---';
+});
+
+// GPS: Stop tracking
+stopTrackingBtn.addEventListener('click', () => {
+    stopGPSTracking();
+    gpsTracking.classList.add('hidden');
+    gpsSetup.classList.remove('hidden');
+    result.classList.add('hidden');
+    holeLocation = null;
+    gpsDistanceDisplay.textContent = '---';
+});
+
+// Start GPS tracking
+function startGPSTracking() {
+    if (!navigator.geolocation) {
+        showError('Geolocation is not supported by your browser');
+        return;
+    }
+
+    watchId = navigator.geolocation.watchPosition(
+        handlePositionUpdate,
+        handlePositionError,
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+}
+
+// Stop GPS tracking
+function stopGPSTracking() {
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
+    if (updateInterval) {
+        clearInterval(updateInterval);
+        updateInterval = null;
+    }
+}
+
+// Handle position update
+async function handlePositionUpdate(position) {
+    if (!holeLocation) return;
+
+    const currentLat = position.coords.latitude;
+    const currentLon = position.coords.longitude;
+
+    // Calculate distance to hole
+    const distanceYards = calculateDistance(
+        currentLat,
+        currentLon,
+        holeLocation.latitude,
+        holeLocation.longitude
+    );
+
+    // Update display
+    gpsDistanceDisplay.textContent = Math.round(distanceYards);
+
+    // Get recommendation if distance is reasonable (> 10 yards)
+    if (distanceYards >= 10) {
+        await updateRecommendation(distanceYards, currentLat, currentLon);
+    }
+}
+
+// Handle position error
+function handlePositionError(error) {
+    console.error('GPS error:', error);
+    let message = 'GPS error: ';
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+            message += 'Location permission denied';
+            break;
+        case error.POSITION_UNAVAILABLE:
+            message += 'Location unavailable';
+            break;
+        case error.TIMEOUT:
+            message += 'Location request timeout';
+            break;
+        default:
+            message += 'Unknown error';
+    }
+    showError(message);
+}
+
+// Calculate distance between two GPS coordinates (Haversine formula)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 3958.8; // Earth's radius in miles
+    const dLat = toRadians(lat2 - lat1);
+    const dLon = toRadians(lon2 - lon1);
+
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distanceMiles = R * c;
+    const distanceYards = distanceMiles * 1760; // Convert miles to yards
+
+    return distanceYards;
+}
+
+// Convert degrees to radians
+function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
+// Update recommendation based on GPS distance
+async function updateRecommendation(distance, latitude, longitude) {
+    try {
+        const handicapInput = document.getElementById('gpsHandicap').value;
+        const handicap = handicapInput ? parseInt(handicapInput) : null;
+
+        const response = await fetch('/api/recommend', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                distance: Math.round(distance),
+                handicap,
+                latitude,
+                longitude
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to get recommendation');
+        }
+
+        const data = await response.json();
+        currentRecommendation = data;
+
+        // Display results
+        displayResults(data);
+
+    } catch (err) {
+        console.error('Error updating recommendation:', err);
+    }
+}
 
 // Get current position using Geolocation API
 function getCurrentPosition() {
@@ -193,12 +408,20 @@ function displayResults(data) {
     result.classList.remove('hidden');
 }
 
-// Show error message
-function showError(message) {
+// Show error/success message
+function showError(message, type = 'error') {
     error.textContent = message;
     error.classList.remove('hidden');
+
+    if (type === 'success') {
+        error.style.background = '#28a745';
+    } else {
+        error.style.background = '';
+    }
+
     setTimeout(() => {
         error.classList.add('hidden');
+        error.style.background = '';
     }, 5000);
 }
 

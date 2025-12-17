@@ -5,27 +5,39 @@ A lightweight web application that recommends the best golf club based on distan
 ## Features
 
 - **Smart Club Recommendations**: Get instant club suggestions based on your target distance
+- **GPS Tracking Mode**: Automatically track your distance to the hole as you move
 - **Handicap Adjustment**: Customized recommendations based on your skill level
 - **Weather Integration**: Automatically factors in wind speed and temperature using your location
-- **Real-time Calculations**: On-the-fly adjustments for weather conditions
+- **Real-time Updates**: Continuously updated recommendations as you move on the course
+- **Two Input Modes**: Choose between manual distance entry or GPS tracking
 - **Clean, Modern UI**: Simple and intuitive interface optimized for mobile and desktop
 - **Lightweight**: No heavy frameworks, fast loading times
 
 ## How It Works
 
+### Manual Mode
 1. **Enter Distance**: Input the distance to the hole in yards
 2. **Add Handicap** (optional): Enter your handicap for personalized club distances
 3. **Weather Check**: App automatically gets your location to fetch current weather conditions
 4. **Get Recommendation**: Receive your club recommendation with alternatives and detailed adjustments
 
+### GPS Tracking Mode
+1. **Mark Hole Location**: Walk to the pin and mark its GPS coordinates
+2. **Move Back**: Walk back to your ball or anywhere on the course
+3. **Auto-Track Distance**: App continuously calculates and updates distance to the hole
+4. **Live Recommendations**: Club recommendations update automatically as you move
+5. **Weather-Aware**: Factors in real-time wind and temperature conditions
+
 ### Algorithm
 
 The app considers multiple factors:
 
+- **GPS Distance Calculation**: Uses Haversine formula to calculate precise distance between your position and the hole
 - **Base Club Distances**: Standard distances for each club (scratch golfer baseline)
 - **Handicap Adjustment**: Reduces club distances based on handicap (≈0.5% per stroke)
 - **Wind Effect**: Adjusts for headwind/tailwind conditions
 - **Temperature Effect**: Accounts for ball flight differences in hot/cold weather
+- **Continuous Tracking**: Updates recommendations as GPS position changes
 - **Alternatives**: Provides longer and shorter club options
 
 ## Tech Stack

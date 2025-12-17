@@ -292,6 +292,136 @@ footer {
     font-size: 0.875rem;
 }
 
+/* Mode Toggle */
+.mode-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 25px;
+    padding: 4px;
+    background: var(--light-bg);
+    border-radius: 8px;
+}
+
+.mode-btn {
+    padding: 12px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: var(--text-light);
+}
+
+.mode-btn.active {
+    background: var(--white);
+    color: var(--primary-color);
+    box-shadow: var(--shadow);
+}
+
+.mode-btn:hover:not(.active) {
+    color: var(--text-dark);
+}
+
+.mode-content {
+    animation: fadeIn 0.3s;
+}
+
+/* GPS Tracking Styles */
+.gps-setup {
+    text-align: center;
+    padding: 20px;
+}
+
+.info-text {
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.gps-tracking {
+    padding: 20px 0;
+}
+
+.tracking-status {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: #d4edda;
+    color: #155724;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.pulse {
+    width: 12px;
+    height: 12px;
+    background: #28a745;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+.distance-display {
+    text-align: center;
+    padding: 30px 20px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    color: var(--white);
+}
+
+.current-distance {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.distance-value {
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.distance-unit {
+    font-size: 1.2rem;
+    opacity: 0.8;
+}
+
+.distance-display small {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.gps-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.gps-actions .btn-secondary {
+    margin-top: 0;
+}
+
 @media (max-width: 768px) {
     header h1 {
         font-size: 2rem;
@@ -307,5 +437,14 @@ footer {
 
     .alternatives {
         grid-template-columns: 1fr;
+    }
+
+    .distance-value {
+        font-size: 2.5rem;
+    }
+
+    .mode-btn {
+        font-size: 0.85rem;
+        padding: 10px;
     }
 }
