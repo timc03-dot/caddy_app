@@ -270,6 +270,79 @@ app.post('/api/recommend', async (req, res) => {
   }
 });
 
+// OpenAlex Authors API endpoint with pagination
+app.get('/api/openalex/authors', async (req, res) => {
+  try {
+    const { filter, perPage = 200 } = req.query;
+
+    // Default filter from the requirement
+    const filterParam = filter || 'last_known_institutions.id:I97018004,has_orcid:true';
+
+    let allAuthors = [];
+    let nextCursor = '*'; // OpenAlex uses '*' for the first page
+    let pageCount = 0;
+    let hasMore = true;
+
+    console.log('Starting OpenAlex authors pagination...');
+
+    while (hasMore) {
+      try {
+        const url = `https://api.openalex.org/authors?filter=${encodeURIComponent(filterParam)}&per-page=${perPage}&cursor=${nextCursor}`;
+
+        console.log(`Fetching page ${pageCount + 1}...`);
+
+        const response = await axios.get(url, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'GolfClubRecommender/1.0 (mailto:user@example.com)' // OpenAlex recommends identifying yourself
+          }
+        });
+
+        const { results, meta } = response.data;
+
+        if (results && results.length > 0) {
+          allAuthors = allAuthors.concat(results);
+          pageCount++;
+          console.log(`Page ${pageCount}: Retrieved ${results.length} authors (total: ${allAuthors.length})`);
+        }
+
+        // Check if there are more pages
+        if (meta && meta.next_cursor) {
+          nextCursor = meta.next_cursor;
+        } else {
+          hasMore = false;
+          console.log('No more pages. Pagination complete.');
+        }
+
+        // Safety limit to prevent infinite loops (adjust as needed)
+        if (pageCount >= 100) {
+          console.log('Reached safety limit of 100 pages');
+          hasMore = false;
+        }
+
+      } catch (pageError) {
+        console.error(`Error fetching page ${pageCount + 1}:`, pageError.message);
+        // If a page fails, stop pagination and return what we have
+        hasMore = false;
+      }
+    }
+
+    res.json({
+      totalAuthors: allAuthors.length,
+      pagesFetched: pageCount,
+      authors: allAuthors,
+      filter: filterParam
+    });
+
+  } catch (error) {
+    console.error('OpenAlex API error:', error.message);
+    res.status(500).json({
+      error: 'Failed to fetch OpenAlex authors',
+      message: error.message
+    });
+  }
+});
+
 // Health check endpoint for Render
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
